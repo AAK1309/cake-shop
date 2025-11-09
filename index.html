@@ -1,0 +1,263 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Cake Order Calculator</title>
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600&display=swap" rel="stylesheet">
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: 'Poppins', sans-serif;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      min-height: 100vh;
+      background: linear-gradient(135deg, #ff9a9e, #fad0c4);
+      color: #333;
+    }
+
+    .container {
+      background: white;
+      padding: 30px;
+      border-radius: 15px;
+      box-shadow: 0 8px 30px rgba(0, 0, 0, 0.15);
+      width: 100%;
+      max-width: 450px;
+      text-align: center;
+      animation: fadeIn 1s ease-in-out;
+    }
+
+    @keyframes fadeIn {
+      0% { opacity: 0; transform: translateY(-20px); }
+      100% { opacity: 1; transform: translateY(0); }
+    }
+
+    h2 {
+      font-size: 2rem;
+      color: #d81b60;
+      margin-bottom: 15px;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+    }
+
+    #cakeImage {
+      width: 100%;
+      max-width: 300px;
+      height: 200px;
+      object-fit: cover;
+      border-radius: 10px;
+      margin: 0 auto 20px;
+      display: block;
+      transition: opacity 0.3s ease;
+    }
+
+    #cakeImage.error {
+      display: none;
+    }
+
+    #imageError {
+      color: red;
+      font-size: 0.9rem;
+      margin-bottom: 20px;
+      display: none;
+    }
+
+    label {
+      display: block;
+      font-size: 1rem;
+      font-weight: 600;
+      color: #555;
+      margin: 15px 0 8px;
+      text-align: left;
+      width: 100%;
+      max-width: 300px;
+      margin-left: auto;
+      margin-right: auto;
+    }
+
+    select, input[type="number"] {
+      width: 100%;
+      max-width: 300px;
+      padding: 12px;
+      border: 2px solid #ddd;
+      border-radius: 8px;
+      font-size: 1rem;
+      transition: border-color 0.3s ease, box-shadow 0.3s ease;
+    }
+
+    select:focus, input[type="number"]:focus {
+      outline: none;
+      border-color: #d81b60;
+      box-shadow: 0 0 8px rgba(216, 27, 96, 0.3);
+    }
+
+    .toppings {
+      text-align: left;
+      width: 100%;
+      max-width: 300px;
+      margin: 20px auto;
+    }
+
+    .toppings div {
+      margin: 10px 0;
+      font-size: 0.95rem;
+      color: #333;
+    }
+
+    .toppings input[type="checkbox"] {
+      margin-right: 10px;
+      accent-color: #d81b60;
+      transform: scale(1.2);
+    }
+
+    button {
+      width: 100%;
+      max-width: 300px;
+      padding: 12px;
+      background: linear-gradient(135deg, #d81b60, #f06292);
+      color: white;
+      border: none;
+      border-radius: 8px;
+      font-size: 1.1rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: transform 0.3s ease, box-shadow 0.3s ease;
+      margin-top: 10px;
+    }
+
+    button:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 5px 15px rgba(216, 27, 96, 0.4);
+    }
+
+    #result {
+      margin-top: 25px;
+      font-size: 1rem;
+      font-weight: 600;
+      color: #d81b60;
+      background: #f9f9f9;
+      padding: 15px;
+      border-radius: 8px;
+      min-height: 50px;
+      text-align: left;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h2>Cake Order Calculator</h2>
+    <img id="cakeImage" src="images/choco.jpg" alt="Cake Image">
+    <div id="imageError">Failed to load cake image.</div>
+
+    <form id="cakeForm">
+      <label for="flavor">Cake Flavor:</label>
+      <select id="flavor">
+        <option value="chocolate">Chocolate ($20)</option>
+        <option value="vanilla">Vanilla ($18)</option>
+        <option value="strawberry">Strawberry ($22)</option>
+      </select>
+
+      <label for="size">Cake Size:</label>
+      <select id="size">
+        <option value="small">Small (x1)</option>
+        <option value="medium">Medium (x1.5)</option>
+        <option value="large">Large (x2)</option>
+      </select>
+
+      <label for="quantity">Quantity:</label>
+      <input type="number" id="quantity" min="1" value="1" required>
+
+      <div class="toppings">
+        <label>Toppings ($2 each):</label>
+        <div><input type="checkbox" value="nuts"> Nuts</div>
+        <div><input type="checkbox" value="fruits"> Fruits</div>
+        <div><input type="checkbox" value="chocolate chips"> Chocolate Chips</div>
+      </div>
+
+      <button type="button" id="calculateBtn">Calculate Total</button>
+      <button type="button" id="resetBtn">Reset</button>
+    </form>
+
+    <div id="result"></div>
+  </div>
+
+  <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+  <script>
+    $(document).ready(function() {
+      // ✅ Use correct image paths and variable names
+      const cakeImages = {
+        chocolate: 'images/choco.jpg',
+        vanilla: 'images/vanilla.jpg',
+        strawberry: 'images/strawberry.jpg'
+      };
+
+      const fallbackImage = 'images/fallback.jpg';
+
+      $('#flavor').change(function() {
+        const selectedFlavor = $(this).val();
+        const $cakeImage = $('#cakeImage');
+        const $imageError = $('#imageError');
+
+        $cakeImage.css('opacity', 0);
+        $imageError.hide();
+        $cakeImage.removeClass('error');
+
+        $cakeImage.attr('src', cakeImages[selectedFlavor]).on('error', function() {
+          $cakeImage.addClass('error');
+          $imageError.show();
+          $cakeImage.attr('src', fallbackImage).css('opacity', 1);
+        }).on('load', function() {
+          $cakeImage.css('opacity', 1);
+        });
+      }).trigger('change');
+
+      $('#calculateBtn').click(function() {
+        const flavor = $('#flavor').val();
+        const size = $('#size').val();
+        const quantity = parseInt($('#quantity').val());
+
+        if (isNaN(quantity) || quantity < 1) {
+          $('#result').html("Please enter a valid quantity (minimum 1).");
+          return;
+        }
+
+        const basePrice = flavor === 'chocolate' ? 20 : flavor === 'vanilla' ? 18 : 22;
+        const sizeMultiplier = size === 'small' ? 1 : size === 'medium' ? 1.5 : 2;
+
+        let toppingsCount = 0;
+        const selectedToppings = [];
+        $('.toppings input[type="checkbox"]:checked').each(function() {
+          toppingsCount++;
+          selectedToppings.push($(this).val());
+        });
+
+        const toppingsPrice = toppingsCount * 2;
+        const subtotal = basePrice * sizeMultiplier;
+        const total = (subtotal + toppingsPrice) * quantity;
+
+        const resultHtml = `
+          <strong>Order Summary:</strong><br>
+          Flavor: ${flavor.charAt(0).toUpperCase() + flavor.slice(1)} ($${basePrice})<br>
+          Size: ${size.charAt(0).toUpperCase() + size.slice(1)} (x${sizeMultiplier})<br>
+          Toppings: ${selectedToppings.length ? selectedToppings.join(', ') : 'None'} ($${toppingsPrice})<br>
+          Quantity: ${quantity}<br>
+          <strong>Total Price: $${total.toFixed(2)}</strong>
+        `;
+        $('#result').html(resultHtml);
+      });
+
+      $('#resetBtn').click(function() {
+        $('#cakeForm')[0].reset();
+        $('#flavor').trigger('change');
+        $('#result').html('');
+      });
+    });
+  </script>
+</body>
+</html>
